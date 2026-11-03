@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 한국어는 어절 단위로 줄바꿈 ("순서 미/루기" 방지) */
+body {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* 키보드 조작 시 포커스가 분명히 보이도록 (PRD §9 접근성) */
+:focus-visible {
+  outline: 3px solid #0d9488;
+  outline-offset: 2px;
+}
