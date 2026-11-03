@@ -9,8 +9,8 @@ interface Prefs {
   prepare_by: "count" | "minutes";
   prepare_value: number;
   imminent_enabled: boolean;
-  kakao_for_prepare: boolean;
-  kakao_for_imminent: boolean;
+  sms_for_prepare: boolean;
+  sms_for_imminent: boolean;
 }
 
 export default function SettingsPage() {
@@ -50,7 +50,7 @@ export default function SettingsPage() {
     }, "휴대폰번호를 등록했습니다.");
 
   const removePhone = () => {
-    if (!confirm("번호를 삭제하면 카카오톡·문자 호출을 받지 못합니다. 삭제할까요?")) return;
+    if (!confirm("번호를 삭제하면 문자 호출을 받지 못합니다. 삭제할까요?")) return;
     return run(async () => {
       await api("/api/me/contact", { method: "DELETE" });
       setPhone(null);
@@ -70,9 +70,9 @@ export default function SettingsPage() {
       <TopBar title="알림 설정" back="/home" />
       <main className="space-y-4 px-4 pt-4">
         <Card>
-          <h2 className="font-bold">카카오톡·문자 호출</h2>
+          <h2 className="font-bold">문자 호출</h2>
           <p className="mt-1 text-sm text-slate-500">
-            <b>지금 입장</b>과 <b>취소·변경</b> 안내는 카카오 알림톡으로 보내고, 실패하면 문자로 다시 보냅니다. 보고 제목은 메시지에 넣지 않습니다.
+            <b>지금 입장</b>과 <b>취소·변경</b> 안내는 문자로 보냅니다. 문자의 링크로 로그인 없이 바로 응답할 수 있고, 보고 제목은 문자에 넣지 않습니다.
           </p>
           {phone ? (
             <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 p-3">
@@ -93,7 +93,7 @@ export default function SettingsPage() {
               <label className="flex items-start gap-2 text-sm text-slate-600">
                 <input type="checkbox" className="mt-1 h-4 w-4" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
                 <span>
-                  [필수] 보고 호출 알림 발송을 위해 휴대폰번호를 수집·이용하는 데 동의합니다. 목적: 알림톡·문자 발송 / 보유: 동의 철회 또는 퇴직 시까지.
+                  [필수] 보고 호출 알림 발송을 위해 휴대폰번호를 수집·이용하는 데 동의합니다. 목적: 보고 호출 문자 발송 / 보유: 동의 철회 또는 퇴직 시까지.
                 </span>
               </label>
               <Button className="w-full" disabled={!phoneInput || !consent} onClick={savePhone}>등록</Button>
@@ -137,18 +137,18 @@ export default function SettingsPage() {
                     </option>
                   ))}
                 </select>
-                <Check label="카톡으로도" checked={prefs.kakao_for_prepare} onChange={(v) => savePrefs({ ...prefs, kakao_for_prepare: v })} />
+                <Check label="문자로도" checked={prefs.sms_for_prepare} onChange={(v) => savePrefs({ ...prefs, sms_for_prepare: v })} />
               </div>
             </Row>
 
             <Row title="임박 알림" desc="다음 순서가 되었을 때" checked={prefs.imminent_enabled} onChange={(v) => savePrefs({ ...prefs, imminent_enabled: v })}>
               <div className="mt-2 text-sm">
-                <Check label="카톡으로도" checked={prefs.kakao_for_imminent} onChange={(v) => savePrefs({ ...prefs, kakao_for_imminent: v })} />
+                <Check label="문자로도" checked={prefs.sms_for_imminent} onChange={(v) => savePrefs({ ...prefs, sms_for_imminent: v })} />
               </div>
             </Row>
 
             <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
-              <b>지금 입장</b>·<b>변경/취소</b> 알림은 놓치면 안 되므로 끌 수 없습니다 (앱 + 카카오톡/문자).
+              <b>지금 입장</b>·<b>변경/취소</b> 알림은 놓치면 안 되므로 끌 수 없습니다 (앱 + 문자).
             </div>
           </Card>
         )}

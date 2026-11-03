@@ -137,8 +137,8 @@ interface PrefRow {
   prepare_by: "count" | "minutes" | null;
   prepare_value: number | null;
   imminent_enabled: boolean | null;
-  kakao_for_prepare: boolean | null;
-  kakao_for_imminent: boolean | null;
+  sms_for_prepare: boolean | null;
+  sms_for_imminent: boolean | null;
 }
 
 /**
@@ -160,7 +160,7 @@ async function evaluateStages(tx: Tx, fx: Effects, room: RoomRow) {
 
   const { rows: prefs } = await tx.query<PrefRow>(
     `SELECT u.id AS user_id, u.name, p.prepare_enabled, p.prepare_by, p.prepare_value, p.imminent_enabled,
-            p.kakao_for_prepare, p.kakao_for_imminent
+            p.sms_for_prepare, p.sms_for_imminent
        FROM users u LEFT JOIN notification_prefs p ON p.user_id = u.id
       WHERE u.id = ANY($1::int[])`,
     [rows.map((r) => r.user_id)],
@@ -182,9 +182,9 @@ async function evaluateStages(tx: Tx, fx: Effects, room: RoomRow) {
         stage: "imminent",
         dedupeKey: `imminent:${req.id}`,
         inapp: true,
-        kakao: p.kakao_for_imminent ?? false,
+        sms: p.sms_for_imminent ?? false,
         message: messages.imminent(base(p.name, room, req)),
-        kakaoLink: () => viewLink(tx, req.id),
+        smsLink: () => viewLink(tx, req.id),
       });
       continue;
     }
@@ -200,9 +200,9 @@ async function evaluateStages(tx: Tx, fx: Effects, room: RoomRow) {
       stage: "prepare",
       dedupeKey: `prepare:${req.id}`,
       inapp: true,
-      kakao: p.kakao_for_prepare ?? false,
+      sms: p.sms_for_prepare ?? false,
       message: messages.prepare(base(p.name, room, req), { ahead: est.ahead, eta: est.etaMinutes }),
-      kakaoLink: () => viewLink(tx, req.id),
+      smsLink: () => viewLink(tx, req.id),
     });
   }
 }
@@ -213,7 +213,7 @@ function base(name: string, room: RoomRow, req: RequestRow): MessageBase {
 
 const isLive = (s: RequestStatus) => s === "waiting" || s === "called" || s === "held" || s === "in_progress";
 
-/** 알림톡 [실시간 대기순서 확인] 버튼용 조회 링크. 로그인 없이 내 신청 상태만 본다 (12시간, 신청이 끝나면 무효). */
+/** 문자 [실시간 대기순서] 조회 링크. 로그인 없이 내 신청 상태만 본다 (12시간, 신청이 끝나면 무효). */
 async function viewLink(tx: Tx, requestId: number) {
   const token = randomBytes(24).toString("base64url");
   await tx.query(
@@ -231,10 +231,10 @@ async function notifyChange(tx: Tx, fx: Effects, room: RoomRow, req: RequestRow,
     stage: "change",
     dedupeKey: `change:${key}:${req.id}`,
     inapp: true,
-    kakao: true, // 변경 알림은 알림톡을 끌 수 없다
+    sms: true, // 변경 알림은 문자를 끌 수 없다
     message: messages.change(base(await userName(tx, req.user_id), room, req), { reason }),
     // 마감·취소 뒤에는 볼 대기순서가 없으므로 링크 버튼을 달지 않는다
-    kakaoLink: isLive(req.status) && key !== "closed" && key !== "cancel" ? () => viewLink(tx, req.id) : undefined,
+    smsLink: isLive(req.status) && key !== "closed" && key !== "cancel" ? () => viewLink(tx, req.id) : undefined,
   });
 }
 
@@ -422,7 +422,7 @@ async function deferInTx(tx: Tx, fx: Effects, room: RoomRow, req: RequestRow, st
   return { moved: to - from, remaining: MAX_DEFERS - req.defer_count - 1 };
 }
 
-/** 호출 응답. 앱 화면(via=app)과 알림톡 링크(via=link) 모두 여기로 들어온다. */
+/** 호출 응답. 앱 화면(via=app)과 문자 링크(via=link) 모두 여기로 들어온다. */
 export async function respondToCall(
   db: Db,
   actor: Actor,
@@ -507,7 +507,7 @@ async function callInTx(tx: Tx, fx: Effects, room: RoomRow, actor: Actor, reques
     stage: "call",
     dedupeKey: `call:${req.id}:${callNo}`,
     inapp: true,
-    kakao: true, // 지금 입장은 알림톡을 끌 수 없다
+    sms: true, // 지금 입장은 문자를 끌 수 없다
     message: messages.call(base(await userName(tx, req.user_id), room, req), { grace: room.grace_minutes, link }),
   });
   await evaluateStages(tx, fx, room);

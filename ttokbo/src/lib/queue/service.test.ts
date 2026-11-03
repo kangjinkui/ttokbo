@@ -140,25 +140,25 @@ describe("단계형 알림", () => {
     // 앞 3건이 되면 준비 알림 1회만
     const n6 = await notes(6);
     expect(n6.filter((n) => n.stage === "prepare")).toHaveLength(1);
-    expect(n6.every((n) => n.channel === "inapp")).toBe(true); // 준비 알림 알림톡은 기본 꺼짐
+    expect(n6.every((n) => n.channel === "inapp")).toBe(true); // 준비 알림 문자는 기본 꺼짐
   });
 
-  it("다음 순서가 되면 임박 알림, 호출은 알림톡(연락처 없으면 skipped)으로 간다", async () => {
+  it("다음 순서가 되면 임박 알림, 호출은 문자(연락처 없으면 skipped)로 간다", async () => {
     const a = await join(1);
     expect((await notes(1)).map((n) => n.stage)).toEqual(["imminent"]);
     await q.call(db, desk, ROOM);
     const n = await notes(1);
     const call = n.filter((x) => x.stage === "call");
-    expect(call.map((x) => [x.channel, x.status])).toEqual([["inapp", "delivered"], ["kakao", "skipped"]]);
+    expect(call.map((x) => [x.channel, x.status])).toEqual([["inapp", "delivered"], ["sms", "skipped"]]);
     expect(call[0].body).not.toContain("제목");
     expect(a.id).toBeGreaterThan(0);
   });
 
-  it("연락처가 있으면 호출 알림톡이 발송 대기(pending)로 쌓인다", async () => {
+  it("연락처가 있으면 호출 문자가 발송 대기(pending)로 쌓인다", async () => {
     await db.query(`INSERT INTO user_contacts VALUES (1, '+821012345678', now(), 'v1')`);
     await join(1);
     await q.call(db, desk, ROOM);
-    const k = (await notes(1)).find((x) => x.stage === "call" && x.channel === "kakao");
+    const k = (await notes(1)).find((x) => x.stage === "call" && x.channel === "sms");
     expect(k?.status).toBe("pending");
   });
 
@@ -175,7 +175,7 @@ describe("비서실 운영", () => {
     await q.call(db, desk, ROOM); // 1번 호출 중
     await q.insertUrgent(db, desk, { roomId: ROOM, userId: 5, expectedMinutes: 5, reason: "민원 긴급 대응" });
     expect(await order()).toEqual([1, 5, 2, 3]);
-    expect((await notes(2)).filter((n) => n.stage === "change")).toHaveLength(2); // inapp + kakao(skipped)
+    expect((await notes(2)).filter((n) => n.stage === "change")).toHaveLength(2); // inapp + sms(skipped)
     expect((await notes(1)).filter((n) => n.stage === "change")).toHaveLength(0); // 호출 중인 사람은 안 밀림
   });
 

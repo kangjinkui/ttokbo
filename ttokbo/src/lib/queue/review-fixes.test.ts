@@ -99,28 +99,28 @@ describe("#7 5분 뒤 가능은 호출당 1회", () => {
   });
 });
 
-describe("#4 #12 #13 #15 알림톡 아웃박스", () => {
+describe("#4 #12 #13 #15 문자 아웃박스", () => {
   beforeEach(async () => {
     await db.query(`INSERT INTO user_contacts VALUES (1, '+821012345678', now(), 'v1')`);
   });
 
-  it("발송 전에 이미 보고가 시작됐으면 호출 알림톡을 보내지 않는다", async () => {
+  it("발송 전에 이미 보고가 시작됐으면 호출 문자를 보내지 않는다", async () => {
     const a = await join(1);
     await q.call(db, desk, ROOM);
     await q.start(db, desk, a.id);
     const { sent, provider } = capture();
     await drainOutbox(db, provider);
     expect(sent).toHaveLength(0);
-    const row = (await db.query<{ status: string; error: string }>(`SELECT status, error FROM notifications WHERE channel = 'kakao' AND stage = 'call'`)).rows[0];
+    const row = (await db.query<{ status: string; error: string }>(`SELECT status, error FROM notifications WHERE channel = 'sms' AND stage = 'call'`)).rows[0];
     expect(row).toEqual({ status: "skipped", error: "STALE" });
   });
 
-  it("SMS 대체 문구에 응답 링크가 있고, 발송 뒤 링크(토큰)는 DB에 남지 않는다", async () => {
+  it("문자에 응답 링크가 있고, 발송 뒤 링크(토큰)는 DB에 남지 않는다", async () => {
     await join(1);
     await q.call(db, desk, ROOM);
     const { sent, provider } = capture();
     await drainOutbox(db, provider);
-    expect(sent[0].alimtalk.smsText).toMatch(/지금 응답하기: http.*\/c\//);
+    expect(sent[0].sms.text).toMatch(/▶ 지금 응답하기\nhttp.*\/c\//);
     const { rows } = await db.query(`SELECT link FROM notifications WHERE link IS NOT NULL`);
     expect(rows).toHaveLength(0);
   });

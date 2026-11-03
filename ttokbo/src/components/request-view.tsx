@@ -26,7 +26,7 @@ export interface RequestDetail {
 
 export type CallResponse = "on_way" | "delay_5" | "defer" | "cancel";
 
-/** 호출 화면: 전체화면 강조 + 응답 버튼 (PRD §5.5). 앱과 알림톡 링크에서 함께 쓴다. */
+/** 호출 화면: 전체화면 강조 + 응답 버튼 (PRD §5.5). 앱과 문자 링크에서 함께 쓴다. */
 export function CallPanel({
   detail,
   onRespond,

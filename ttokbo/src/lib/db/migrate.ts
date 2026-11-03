@@ -151,6 +151,17 @@ CREATE INDEX notifications_recipient ON notifications (recipient_id, created_at 
 ALTER TABLE call_tokens ADD COLUMN kind text NOT NULL DEFAULT 'call' CHECK (kind IN ('call','view'));
 `,
   },
+  {
+    // 카카오 알림톡 대신 문자(솔라피)로 발송
+    id: "0003_sms_channel",
+    sql: /* sql */ `
+ALTER TABLE notifications DROP CONSTRAINT notifications_channel_check;
+UPDATE notifications SET channel = 'sms', dedupe_key = replace(dedupe_key, ':kakao', ':sms') WHERE channel = 'kakao';
+ALTER TABLE notifications ADD CONSTRAINT notifications_channel_check CHECK (channel IN ('inapp','sms'));
+ALTER TABLE notification_prefs RENAME COLUMN kakao_for_prepare TO sms_for_prepare;
+ALTER TABLE notification_prefs RENAME COLUMN kakao_for_imminent TO sms_for_imminent;
+`,
+  },
 ];
 
 export async function migrate(db: Db) {

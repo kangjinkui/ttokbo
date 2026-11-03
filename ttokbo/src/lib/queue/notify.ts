@@ -8,7 +8,7 @@ export interface Message {
   title: string;
   body: string;
   link?: string;
-  /** 알림톡 템플릿 치환값. 보고 제목은 절대 넣지 않는다 (PRD §5.4.1). */
+  /** 문자 문구 치환값. 보고 제목은 절대 넣지 않는다 (PRD §5.4.1). */
   vars: Record<string, string>;
 }
 
@@ -25,21 +25,21 @@ export async function enqueue(
     stage: Stage;
     dedupeKey: string;
     inapp: boolean;
-    kakao: boolean;
+    sms: boolean;
     message: Message;
-    /** 알림톡 버튼 링크가 없을 때 만들 함수 (실제 발송할 때만 토큰을 발급) */
-    kakaoLink?: () => Promise<string>;
+    /** 문자 링크가 없을 때 만들 함수 (실제 발송할 때만 토큰을 발급) */
+    smsLink?: () => Promise<string>;
   },
 ) {
   const { requestId, recipientId, stage, dedupeKey, message } = args;
-  const channels: ("inapp" | "kakao")[] = [];
+  const channels: ("inapp" | "sms")[] = [];
   if (args.inapp) channels.push("inapp");
-  if (args.kakao) channels.push("kakao");
+  if (args.sms) channels.push("sms");
 
   for (const channel of channels) {
     let status = channel === "inapp" ? "delivered" : "pending";
     let error: string | null = null;
-    if (channel === "kakao") {
+    if (channel === "sms") {
       const { rows } = await tx.query(`SELECT 1 FROM user_contacts WHERE user_id = $1`, [recipientId]);
       if (rows.length === 0) {
         status = "skipped";
@@ -47,10 +47,10 @@ export async function enqueue(
       }
     }
     let link: string | null = null;
-    if (channel === "kakao" && status === "pending") {
-      const { rows: dup } = await tx.query(`SELECT 1 FROM notifications WHERE dedupe_key = $1`, [`${dedupeKey}:kakao`]);
+    if (channel === "sms" && status === "pending") {
+      const { rows: dup } = await tx.query(`SELECT 1 FROM notifications WHERE dedupe_key = $1`, [`${dedupeKey}:sms`]);
       if (dup.length) continue;
-      link = message.link ?? (args.kakaoLink ? await args.kakaoLink() : null);
+      link = message.link ?? (args.smsLink ? await args.smsLink() : null);
     }
     const { rows } = await tx.query(
       `INSERT INTO notifications
@@ -69,7 +69,7 @@ export async function enqueue(
   }
 }
 
-/** 모든 알림톡 템플릿에 공통으로 들어가는 값 (똑닥식 "- 접수일 / - 보고실 …" 목록) */
+/** 모든 문자 문구에 공통으로 들어가는 값 (똑닥식 "- 접수일 / - 보고실 …" 목록) */
 export interface MessageBase {
   name: string;
   room: { name: string; location: string };

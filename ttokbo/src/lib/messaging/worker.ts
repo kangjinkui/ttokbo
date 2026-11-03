@@ -1,12 +1,12 @@
 import { getDb } from "../db";
 import { bus, publish, type BusEvent } from "../realtime/bus";
 import { closePreviousDays } from "../queue/service";
-import { drainOutbox } from "./outbox";
+import { drainOutbox, pollDeliveries } from "./outbox";
 import { getProvider } from "./provider";
 
 const g = globalThis as unknown as { __ttokboWorker?: boolean };
 
-/** 알림톡 발송 워커. 신규 알림이 쌓이면 바로, 아니면 5초마다 재시도분을 확인한다. */
+/** 문자 발송 워커. 신규 알림이 쌓이면 바로, 아니면 5초마다 재시도분을 확인한다. */
 export function startMessagingWorker() {
   if (g.__ttokboWorker) return;
   g.__ttokboWorker = true;
@@ -48,4 +48,15 @@ export function startMessagingWorker() {
   };
   void rollover();
   setInterval(rollover, 60_000).unref();
+
+  // 접수된 문자의 수신 결과 확인 (15초마다)
+  const poll = async () => {
+    try {
+      const fx = await pollDeliveries(await getDb(), getProvider());
+      if (fx.rooms.size || fx.users.size) publish(fx);
+    } catch (err) {
+      console.error("[messaging] delivery poll failed", err);
+    }
+  };
+  setInterval(poll, 15_000).unref();
 }

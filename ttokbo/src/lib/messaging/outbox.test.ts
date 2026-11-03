@@ -19,28 +19,28 @@ beforeEach(async () => {
 });
 afterEach(async () => db.close());
 
-async function kakaoRow() {
+async function smsRow() {
   return (await db.query<{ status: string; attempts: number; error: string | null; provider_message_id: string | null }>(
-    `SELECT status, attempts, error, provider_message_id FROM notifications WHERE channel = 'kakao' AND stage = 'call'`)).rows[0];
+    `SELECT status, attempts, error, provider_message_id FROM notifications WHERE channel = 'sms' AND stage = 'call'`)).rows[0];
 }
 
-describe("알림톡 아웃박스", () => {
-  it("호출 알림톡을 보내고 보고 제목은 넣지 않는다", async () => {
+describe("문자 아웃박스", () => {
+  it("호출 문자를 보내고 보고 제목은 넣지 않는다", async () => {
     const sent: OutboundMessage[] = [];
     const provider: MessagingProvider = { name: "t", send: async (m) => (sent.push(m), { status: "sent", providerMessageId: "m1" }) };
     const fx = await drainOutbox(db, provider);
     expect(sent).toHaveLength(1);
     expect(sent[0]).toMatchObject({ to: "+821012345678", stage: "call" });
-    expect(sent[0].alimtalk.button?.url).toMatch(/\/c\//);
+    expect(sent[0].sms.text).toMatch(/지금 응답하기\nhttp.*\/c\//);
     expect(JSON.stringify(sent[0])).not.toContain("대외비");
     expect(fx.rooms.has(1)).toBe(true);
-    expect((await kakaoRow()).status).toBe("sent");
+    expect((await smsRow()).status).toBe("sent");
 
-    // 웹훅으로 SMS 대체발송 결과 반영
-    await applyDeliveryReport(db, { providerMessageId: "m1", status: "fallback_sms" });
-    expect((await kakaoRow()).status).toBe("fallback_sms");
+    // 수신 결과(상태 조회·웹훅) 반영
+    await applyDeliveryReport(db, { providerMessageId: "m1", status: "delivered" });
+    expect((await smsRow()).status).toBe("delivered");
     const view = await q.deskView(db, desk, 1);
-    expect(view.queue[0].delivery).toContainEqual(expect.objectContaining({ channel: "kakao", status: "fallback_sms" }));
+    expect(view.queue[0].delivery).toContainEqual(expect.objectContaining({ channel: "sms", status: "delivered" }));
   });
 
   it("두 번 비워도 한 번만 보낸다", async () => {
@@ -57,6 +57,6 @@ describe("알림톡 아웃박스", () => {
       await db.query(`UPDATE notifications SET next_attempt_at = now()`);
       await drainOutbox(db, provider);
     }
-    expect(await kakaoRow()).toMatchObject({ status: "failed", attempts: 3, error: "timeout" });
+    expect(await smsRow()).toMatchObject({ status: "failed", attempts: 3, error: "timeout" });
   });
 });

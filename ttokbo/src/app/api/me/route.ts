@@ -13,7 +13,7 @@ export async function GET() {
       phone: contact[0]?.phone_e164 ?? null,
       prefs: prefs[0] ?? {
         prepare_enabled: true, prepare_by: "count", prepare_value: 3,
-        imminent_enabled: true, kakao_for_prepare: false, kakao_for_imminent: false,
+        imminent_enabled: true, sms_for_prepare: false, sms_for_imminent: false,
       },
     });
   });

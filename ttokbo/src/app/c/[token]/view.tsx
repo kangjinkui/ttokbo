@@ -6,7 +6,7 @@ import { CallPanel, FinishedPanel, WaitingPanel, type CallResponse, type Request
 import { ErrorText } from "@/components/ui";
 import { api } from "@/lib/client/api";
 
-/** 알림톡·문자 버튼으로 여는 1회용 호출 화면. 로그인 없이 이번 호출에만 응답할 수 있다. */
+/** 문자 링크로 여는 1회용 호출 화면. 로그인 없이 이번 호출에만 응답할 수 있다. */
 export function CallLinkPage() {
   const { token } = useParams<{ token: string }>();
   const [data, setData] = useState<(RequestDetail & { valid: true }) | { valid: false; status: string } | null>(null);

@@ -61,7 +61,7 @@ export default function HomePage() {
         title="똑보"
         right={
           <div className="flex items-center gap-1">
-            <Link href="/alimtalk" className="rounded-lg px-2 py-1 text-sm text-slate-600 hover:bg-slate-100">알림톡</Link>
+            <Link href="/sms" className="rounded-lg px-2 py-1 text-sm text-slate-600 hover:bg-slate-100">문자함</Link>
             <Link href="/settings" className="rounded-lg px-2 py-1 text-sm text-slate-600 hover:bg-slate-100">알림 설정</Link>
             <button onClick={logout} className="rounded-lg px-2 py-1 text-sm text-slate-500 hover:bg-slate-100">로그아웃</button>
           </div>
@@ -77,7 +77,7 @@ export default function HomePage() {
 
         {data && !data.user.hasContact && (
           <Link href="/settings" className="block rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200">
-            <p className="font-semibold text-amber-900">📱 카카오톡·문자로 호출받으려면 휴대폰번호를 등록하세요</p>
+            <p className="font-semibold text-amber-900">📱 문자로 호출받으려면 휴대폰번호를 등록하세요</p>
             <p className="mt-1 text-sm text-amber-800">등록하지 않으면 앱 화면 알림만 받습니다.</p>
           </Link>
         )}

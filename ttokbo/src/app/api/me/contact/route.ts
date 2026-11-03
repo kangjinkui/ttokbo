@@ -12,7 +12,7 @@ function toE164(raw: string) {
   return null;
 }
 
-// 휴대폰번호 수집·이용 동의 (PRD §5.4.1). 알림톡·문자 호출에만 사용한다.
+// 휴대폰번호 수집·이용 동의 (PRD §5.4.1). 문자 호출에만 사용한다.
 export async function PUT(req: Request) {
   return handle(async () => {
     const user = await requireUser();
@@ -30,7 +30,7 @@ export async function PUT(req: Request) {
   });
 }
 
-/** 동의 철회: 번호를 지운다. 이후 알림톡은 발송되지 않는다. */
+/** 동의 철회: 번호를 지운다. 이후 문자는 발송되지 않는다. */
 export async function DELETE() {
   return handle(async () => {
     const user = await requireUser();

@@ -4,7 +4,7 @@ import { publish } from "@/lib/realtime/bus";
 import { myRequest, resolveCallToken, respondToCall } from "@/lib/queue/service";
 import { QueueError, type CallResponse } from "@/lib/queue/types";
 
-// 알림톡·문자 버튼의 1회용 링크. 로그인 없이 이번 호출에 대해서만 조회·응답할 수 있다.
+// 문자에 들어가는 1회용 링크. 로그인 없이 이번 호출에 대해서만 조회·응답할 수 있다.
 
 async function resolve(token: string) {
   const db = await getDb();

@@ -8,8 +8,8 @@ interface Prefs {
   prepare_by: "count" | "minutes";
   prepare_value: number;
   imminent_enabled: boolean;
-  kakao_for_prepare: boolean;
-  kakao_for_imminent: boolean;
+  sms_for_prepare: boolean;
+  sms_for_imminent: boolean;
 }
 
 export async function PUT(req: Request) {
@@ -22,11 +22,11 @@ export async function PUT(req: Request) {
     if (!valid) throw new QueueError("INVALID_PREFS", "준비 알림 기준은 앞 1~5건 또는 5~30분이어야 합니다.");
     const db = await getDb();
     await db.query(
-      `INSERT INTO notification_prefs (user_id, prepare_enabled, prepare_by, prepare_value, imminent_enabled, kakao_for_prepare, kakao_for_imminent)
+      `INSERT INTO notification_prefs (user_id, prepare_enabled, prepare_by, prepare_value, imminent_enabled, sms_for_prepare, sms_for_imminent)
        VALUES ($1,$2,$3,$4,$5,$6,$7)
        ON CONFLICT (user_id) DO UPDATE SET prepare_enabled = $2, prepare_by = $3, prepare_value = $4,
-         imminent_enabled = $5, kakao_for_prepare = $6, kakao_for_imminent = $7`,
-      [user.id, !!p.prepare_enabled, p.prepare_by, p.prepare_value, !!p.imminent_enabled, !!p.kakao_for_prepare, !!p.kakao_for_imminent],
+         imminent_enabled = $5, sms_for_prepare = $6, sms_for_imminent = $7`,
+      [user.id, !!p.prepare_enabled, p.prepare_by, p.prepare_value, !!p.imminent_enabled, !!p.sms_for_prepare, !!p.sms_for_imminent],
     );
     return ok({ ok: true });
   });

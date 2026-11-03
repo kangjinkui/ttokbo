@@ -248,18 +248,17 @@ export function DeskPage() {
 }
 
 function DeliveryBadges({ items, hasPhone }: { items: Delivery[]; hasPhone: boolean }) {
-  const kakao = items.find((d) => d.channel === "kakao" && d.stage === "call");
+  const sms = items.find((d) => d.channel === "sms" && d.stage === "call");
   if (!hasPhone) return <span className="rounded bg-slate-100 px-1.5 text-xs text-slate-600">번호 미등록 · 앱 알림만</span>;
-  if (!kakao) return null;
+  if (!sms) return null;
   const map: Record<string, [string, string]> = {
-    pending: ["알림톡 발송 중", "bg-slate-100 text-slate-600"],
-    sent: ["알림톡 접수", "bg-slate-100 text-slate-700"],
-    delivered: ["알림톡 도달 ✓", "bg-emerald-100 text-emerald-800"],
-    fallback_sms: ["문자 대체발송 ✓", "bg-sky-100 text-sky-800"],
+    pending: ["문자 발송 중", "bg-slate-100 text-slate-600"],
+    sent: ["문자 전송 중", "bg-slate-100 text-slate-700"],
+    delivered: ["문자 수신 ✓", "bg-emerald-100 text-emerald-800"],
     failed: ["발송 실패 — 전화로 호출하세요", "bg-rose-100 text-rose-700"],
     skipped: ["번호 없음", "bg-slate-100 text-slate-600"],
   };
-  const [label, tone] = map[kakao.status] ?? [kakao.status, "bg-slate-100"];
+  const [label, tone] = map[sms.status] ?? [sms.status, "bg-slate-100"];
   return <span className={`rounded px-1.5 text-xs font-semibold ${tone}`}>{label}</span>;
 }
 
