@@ -66,10 +66,18 @@ export function createSolapiProvider(env = process.env): MessagingProvider {
     name: "solapi",
     async send(msg) {
       const s = await service();
-      const res = await s.send(
-        { to: toDomesticNumber(msg.to), from: sender, text: msg.sms.text, subject: msg.sms.subject },
-        { showMessageList: true },
-      );
+      let res;
+      try {
+        res = await s.send(
+          { to: toDomesticNumber(msg.to), from: sender, text: msg.sms.text, subject: msg.sms.subject },
+          { showMessageList: true },
+        );
+      } catch (err) {
+        // 전부 접수 실패면 SDK가 예외를 던지고 사유는 failedMessageList에 담긴다
+        const f = (err as { failedMessageList?: { statusCode: string; statusMessage: string }[] }).failedMessageList?.[0];
+        if (f) throw new Error(`솔라피 접수 실패 ${f.statusCode} ${f.statusMessage}`);
+        throw err;
+      }
       const failed = res.failedMessageList?.[0];
       if (failed) throw new Error(`솔라피 접수 실패 ${failed.statusCode} ${failed.statusMessage}`);
       const id = res.messageList?.[0]?.messageId;
