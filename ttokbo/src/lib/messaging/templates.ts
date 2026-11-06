@@ -82,7 +82,8 @@ export function renderSms(stage: Stage, vars: Record<string, string>, url: strin
   const parts = {
     headline: fill(t.headline, vars),
     emphasis: fill(t.emphasis, vars),
-    body: fill(t.body, vars),
+    // 값이 비어 있는 정보 줄(예: 위치 미입력)은 뺀다.
+    body: fill(t.body, vars).replace(/^- [^:\n]+: *\n/gm, ""),
     link: url ? { label: t.linkLabel, url } : null,
     footer: FOOTER,
   };
@@ -109,12 +110,15 @@ export function formatKoreanDateTime(d: Date) {
       weekday: "short",
       hour: "2-digit",
       minute: "2-digit",
-      hour12: true,
+      hourCycle: "h23",
     })
       .formatToParts(d)
       .map((p) => [p.type, p.value]),
   );
-  return `${parts.year}.${parts.month}.${parts.day} (${parts.weekday}) ${parts.dayPeriod} ${parts.hour}:${parts.minute}`;
+  // 오전/오후는 직접 붙인다. 실행 환경의 ICU에 따라 dayPeriod가 "PM"으로 나오기도 한다.
+  const h = Number(parts.hour);
+  const hour12 = String(h % 12 || 12).padStart(2, "0");
+  return `${parts.year}.${parts.month}.${parts.day} (${parts.weekday}) ${h < 12 ? "오전" : "오후"} ${hour12}:${parts.minute}`;
 }
 
 /** +821012345678 → 01012345678 (국내 문자 발송 형식) */

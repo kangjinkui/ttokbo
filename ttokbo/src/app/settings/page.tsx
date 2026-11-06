@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PhoneVerify } from "@/components/phone-verify";
 import { Button, Card, ErrorText, TopBar, useClientValue } from "@/components/ui";
 import { api } from "@/lib/client/api";
 
@@ -15,8 +16,7 @@ interface Prefs {
 
 export default function SettingsPage() {
   const [phone, setPhone] = useState<string | null>(null);
-  const [phoneInput, setPhoneInput] = useState("");
-  const [consent, setConsent] = useState(false);
+  const [changingPhone, setChangingPhone] = useState(false);
   const [prefs, setPrefs] = useState<Prefs | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,20 +42,13 @@ export default function SettingsPage() {
     }
   }
 
+  // 새 번호의 인증번호 확인이 끝나면 저장한다 (번호가 로그인 아이디라 인증 없이 바꿀 수 없다)
   const savePhone = () =>
     run(async () => {
-      const r = await api<{ phone: string }>("/api/me/contact", { method: "PUT", json: { phone: phoneInput, consent } });
+      const r = await api<{ phone: string }>("/api/me/contact", { method: "PUT" });
       setPhone(r.phone);
-      setPhoneInput("");
-    }, "휴대폰번호를 등록했습니다.");
-
-  const removePhone = () => {
-    if (!confirm("번호를 삭제하면 문자 호출을 받지 못합니다. 삭제할까요?")) return;
-    return run(async () => {
-      await api("/api/me/contact", { method: "DELETE" });
-      setPhone(null);
-    }, "번호를 삭제했습니다.");
-  };
+      setChangingPhone(false);
+    }, "휴대폰 번호를 바꿨습니다. 다음 로그인부터 새 번호를 쓰세요.");
 
   const savePrefs = (next: Prefs) =>
     run(async () => {
@@ -74,31 +67,18 @@ export default function SettingsPage() {
           <p className="mt-1 text-sm text-slate-500">
             <b>지금 입장</b>과 <b>취소·변경</b> 안내는 문자로 보냅니다. 문자의 링크로 로그인 없이 바로 응답할 수 있고, 보고 제목은 문자에 넣지 않습니다.
           </p>
-          {phone ? (
-            <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 p-3">
-              <span className="font-semibold">{display}</span>
-              <Button variant="ghost" size="sm" onClick={removePhone}>삭제(동의 철회)</Button>
+          {changingPhone ? (
+            <div className="mt-3 space-y-2">
+              <PhoneVerify purpose="change" submitLabel="새 번호로 인증번호 받기" onVerified={savePhone} />
+              <Button variant="ghost" size="sm" onClick={() => setChangingPhone(false)}>취소</Button>
             </div>
           ) : (
-            <div className="mt-3 space-y-3">
-              <input
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder="010-0000-0000"
-                value={phoneInput}
-                onChange={(e) => setPhoneInput(e.target.value)}
-                aria-label="휴대폰번호"
-                className="w-full rounded-xl px-3 py-3 ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-teal-500"
-              />
-              <label className="flex items-start gap-2 text-sm text-slate-600">
-                <input type="checkbox" className="mt-1 h-4 w-4" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-                <span>
-                  [필수] 보고 호출 알림 발송을 위해 휴대폰번호를 수집·이용하는 데 동의합니다. 목적: 보고 호출 문자 발송 / 보유: 동의 철회 또는 퇴직 시까지.
-                </span>
-              </label>
-              <Button className="w-full" disabled={!phoneInput || !consent} onClick={savePhone}>등록</Button>
+            <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 p-3">
+              <span className="font-semibold">{display ?? "등록된 번호 없음"}</span>
+              <Button variant="ghost" size="sm" onClick={() => setChangingPhone(true)}>번호 변경</Button>
             </div>
           )}
+          <p className="mt-2 text-xs text-slate-500">이 번호로 로그인하고 호출 문자를 받습니다. 탈퇴(동의 철회)는 관리자에게 요청해 주세요.</p>
         </Card>
 
         {prefs && (

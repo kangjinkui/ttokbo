@@ -20,6 +20,10 @@ export async function api<T>(path: string, init?: RequestInit & { json?: unknown
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- 세션 만료: 전체 새로고침으로 로그인 이동
       window.location.assign(`/login?next=${encodeURIComponent(location.pathname)}`);
     }
+    if (data?.error?.code === "PENDING_APPROVAL" && location.pathname !== "/pending") {
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- 승인 전 사용자는 대기 화면으로
+      window.location.assign("/pending");
+    }
     throw new ApiError(data?.error?.code ?? "ERROR", data?.error?.message ?? "요청에 실패했습니다.", res.status);
   }
   return data as T;

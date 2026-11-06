@@ -162,6 +162,33 @@ ALTER TABLE notification_prefs RENAME COLUMN kakao_for_prepare TO sms_for_prepar
 ALTER TABLE notification_prefs RENAME COLUMN kakao_for_imminent TO sms_for_imminent;
 `,
   },
+  {
+    // 국 → 과 2단계 조직도. parent_id가 없으면 국(단)이다.
+    id: "0004_department_tree",
+    sql: /* sql */ `
+ALTER TABLE departments ADD COLUMN parent_id int REFERENCES departments(id);
+`,
+  },
+  {
+    // 휴대폰 문자 인증 로그인. 번호가 곧 로그인 아이디이고, 스스로 가입한 사람은 관리자 승인 후 사용한다.
+    id: "0005_phone_login",
+    sql: /* sql */ `
+ALTER TABLE users ALTER COLUMN employee_id DROP NOT NULL;
+ALTER TABLE users ADD COLUMN approved boolean NOT NULL DEFAULT true;
+ALTER TABLE users ADD COLUMN created_at timestamptz NOT NULL DEFAULT now();
+CREATE UNIQUE INDEX user_contacts_phone ON user_contacts (phone_e164);
+CREATE TABLE login_codes (
+  id          serial PRIMARY KEY,
+  phone_e164  text NOT NULL,
+  code_hash   text NOT NULL,
+  expires_at  timestamptz NOT NULL,
+  attempts    int NOT NULL DEFAULT 0,
+  used_at     timestamptz,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX login_codes_phone ON login_codes (phone_e164, created_at DESC);
+`,
+  },
 ];
 
 export async function migrate(db: Db) {

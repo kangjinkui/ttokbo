@@ -82,7 +82,7 @@ function baseVars(b: MessageBase): Record<string, string> {
     이름: b.name,
     대기번호: String(b.ticket),
     보고실: b.room.name,
-    위치: b.room.location || "-",
+    위치: b.room.location,
     접수일시: formatKoreanDateTime(b.createdAt),
   };
 }

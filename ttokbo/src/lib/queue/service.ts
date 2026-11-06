@@ -655,7 +655,7 @@ export async function insertUrgent(
     const room = await lockRoom(tx, input.roomId);
     await assertDesk(tx, actor, room.id);
     const { rows: target } = await tx.query(
-      `SELECT 1 FROM users WHERE id = $1 AND active AND role IN ('staff','executive')`, [input.userId]);
+      `SELECT 1 FROM users WHERE id = $1 AND active AND approved AND role IN ('staff','executive')`, [input.userId]);
     if (!target.length) throw new QueueError("USER_NOT_FOUND", "긴급보고를 넣을 직원을 찾을 수 없습니다.", 404);
     await closePreviousDaysInTx(tx, fx, room);
     const before = await queueRows(tx, room.id);
@@ -955,9 +955,9 @@ export async function deskRooms(db: Db, actor: Actor) {
 
 export async function findStaff(db: Db, actor: Actor, q: string) {
   if (actor.role !== "secretary" && actor.role !== "admin") throw new QueueError("FORBIDDEN", "권한이 없습니다.", 403);
-  const { rows } = await db.query<{ id: number; name: string; department: string | null; employee_id: string }>(
+  const { rows } = await db.query<{ id: number; name: string; department: string | null; employee_id: string | null }>(
     `SELECT u.id, u.name, d.name AS department, u.employee_id FROM users u LEFT JOIN departments d ON d.id = u.department_id
-      WHERE u.active AND u.role IN ('staff','executive') AND (u.name LIKE $1 OR u.employee_id LIKE $1) ORDER BY u.name LIMIT 10`,
+      WHERE u.active AND u.approved AND u.role IN ('staff','executive') AND (u.name LIKE $1 OR u.employee_id LIKE $1) ORDER BY u.name LIMIT 10`,
     [`%${q}%`],
   );
   return rows;

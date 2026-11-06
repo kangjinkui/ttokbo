@@ -264,7 +264,7 @@ function DeliveryBadges({ items, hasPhone }: { items: Delivery[]; hasPhone: bool
 
 function UrgentDialog({ roomId, onClose, onDone }: { roomId: string; onClose: () => void; onDone: () => Promise<void> }) {
   const [q, setQ] = useState("");
-  const [results, setResults] = useState<{ id: number; name: string; department: string | null; employee_id: string }[]>([]);
+  const [results, setResults] = useState<{ id: number; name: string; department: string | null; employee_id: string | null }[]>([]);
   const [picked, setPicked] = useState<{ id: number; name: string } | null>(null);
   const [minutes, setMinutes] = useState(10);
   const [reason, setReason] = useState("");
@@ -312,7 +312,7 @@ function UrgentDialog({ roomId, onClose, onDone }: { roomId: string; onClose: ()
               {results.map((u) => (
                 <li key={u.id}>
                   <button className="w-full rounded-lg px-3 py-2 text-left hover:bg-slate-50" onClick={() => setPicked(u)}>
-                    <b>{u.name}</b> <span className="text-sm text-slate-500">{u.department} · {u.employee_id}</span>
+                    <b>{u.name}</b> <span className="text-sm text-slate-500">{[u.department, u.employee_id].filter(Boolean).join(" · ")}</span>
                   </button>
                 </li>
               ))}

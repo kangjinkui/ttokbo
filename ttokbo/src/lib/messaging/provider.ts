@@ -7,7 +7,8 @@ export interface OutboundMessage {
   /** 중복 방지 키 (아웃박스 행 기준). 솔라피는 키를 받지 않아 아웃박스의 임대(lease)로 중복을 막는다. */
   idempotencyKey: string;
   to: string; // E.164 (+8210...)
-  stage: Stage;
+  /** account: 인증번호·가입 승인 등 대기열과 무관한 안내 */
+  stage: Stage | "account";
   sms: RenderedSms;
 }
 
