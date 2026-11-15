@@ -5,12 +5,17 @@ Requires=postgresql.service
 
 [Service]
 User=ttokbo
-WorkingDirectory=/opt/ttokbo/ttokbo
+WorkingDirectory=/opt/ttokbo/current
+EnvironmentFile=/etc/ttokbo/db.env
 EnvironmentFile=/etc/ttokbo/ttokbo.env
-# 외부 접속은 Caddy(HTTPS)만 받고, 앱은 서버 안에서만 연다
-ExecStart=/usr/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+Environment=PORT=3100 HOSTNAME=127.0.0.1 NODE_OPTIONS=--max-old-space-size=384
+# 똑보 전용 Node 24 (시스템 Node는 같은 서버의 다른 서비스가 쓴다)
+ExecStart=/opt/ttokbo/node/bin/node server.js
 Restart=always
 RestartSec=3
+# 같은 서버의 당직봇을 보호: 메모리 상한을 두고, 부족할 때는 똑보가 먼저 정리되게 한다
+MemoryMax=700M
+OOMScoreAdjust=500
 
 [Install]
 WantedBy=multi-user.target
