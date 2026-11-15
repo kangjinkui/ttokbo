@@ -30,6 +30,16 @@ const ROLE_LABEL: Record<string, string> = {
 
 export default function LoginPage() {
   const [step, setStep] = useState<"verify" | "signup">("verify");
+  const [checking, setChecking] = useState(true);
+
+  // 이미 로그인돼 있으면 (방문 기록·즐겨찾기로 /login에 들어온 경우) 인증 없이 바로 보낸다
+  useEffect(() => {
+    api<{ user: { role: string; approved: boolean } }>("/api/me")
+      .then(({ user }) => goHome(user.role, user.approved))
+      .catch(() => setChecking(false));
+  }, []);
+
+  if (checking) return <main className="p-8 text-center text-slate-500">불러오는 중…</main>;
 
   return (
     <main className="mx-auto max-w-md px-4 py-10">

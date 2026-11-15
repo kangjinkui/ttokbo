@@ -22,6 +22,25 @@ DB 설정 없이 바로 뜬다. 기본 DB는 프로세스 안에서 도는 Postg
 
 운영 실행: `npm run build && SESSION_SECRET=... npm start` (환경변수는 `.env.example` 참고).
 
+## 서버 배포 (네이버 공공클라우드, Ubuntu 24.04)
+
+서버 1대에 앱(Next.js) + PostgreSQL + Caddy(HTTPS 자동)를 함께 둔다. 실시간 알림 버스와 문자 워커가 프로세스 안에서 돌기 때문에 서버리스가 아닌 상시 서버여야 한다.
+
+```bash
+# 최초 1회 (서버에서 root)
+curl -fsSLO https://raw.githubusercontent.com/kangjinkui/ttokbo/main/ttokbo/deploy/setup.sh
+sudo bash setup.sh <도메인>          # 도메인이 없으면 <IP 하이픈 표기>.sslip.io
+sudo vi /etc/ttokbo/ttokbo.env      # 솔라피 키, MESSAGING_PROVIDER=solapi, ADMIN_PHONES
+sudo systemctl restart ttokbo
+
+# 이후 배포 (main에 푸시한 뒤)
+sudo bash /opt/ttokbo/ttokbo/deploy/deploy.sh
+```
+
+- 방화벽(ACG): 80·443 공개, 22는 관리자 IP만
+- 솔라피 허용 IP에 서버 공인 IP 등록
+- 로그 `journalctl -u ttokbo -f`, DB 백업 `/var/backups/ttokbo` (매일, 14일 보관)
+
 ## 검증
 
 ```bash

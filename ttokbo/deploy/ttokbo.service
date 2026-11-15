@@ -1,0 +1,16 @@
+[Unit]
+Description=ttokbo (똑보)
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+User=ttokbo
+WorkingDirectory=/opt/ttokbo/ttokbo
+EnvironmentFile=/etc/ttokbo/ttokbo.env
+# 외부 접속은 Caddy(HTTPS)만 받고, 앱은 서버 안에서만 연다
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
