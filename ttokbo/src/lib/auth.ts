@@ -66,6 +66,22 @@ export const phoneTicketCookieOptions = {
   maxAge: PHONE_TICKET_MAX_AGE,
 };
 
+/** 관리자가 시험 계정으로 전환했을 때 돌아갈 관리자 세션 (서명 쿠키) */
+export const RETURN_COOKIE = "tb_return";
+/** 화면 위 "시험 계정으로 보는 중" 띠 표시용. 값은 시험 계정 이름이고 권한과는 무관하다. */
+export const TEST_VIEW_COOKIE = "tb_test_view";
+
+export async function returnAdminId(): Promise<number | null> {
+  return decodeSession((await cookies()).get(RETURN_COOKIE)?.value);
+}
+
+export const testViewCookieOptions = {
+  sameSite: "lax" as const,
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+  maxAge: 60 * 60 * 12,
+};
+
 export interface SessionUser extends Actor {
   name: string;
   department: string | null;

@@ -14,6 +14,7 @@ interface AdminUser {
   approved: boolean;
   created_at: string;
   room_ids: number[];
+  is_test: boolean;
 }
 
 interface Room {
@@ -63,8 +64,29 @@ export default function AdminPage() {
     }
   }
 
+  async function createTestAccounts() {
+    setError(null);
+    try {
+      await api("/api/admin/test-accounts", { method: "POST" });
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  async function viewAs(userId: number, role: string) {
+    try {
+      await api("/api/admin/impersonate", { json: { userId } });
+      // 세션이 바뀌므로 실시간 연결까지 새로 맺도록 전체 이동
+      window.location.assign(role === "secretary" ? "/desk" : "/home");
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
+  const testAccounts = users?.filter((u) => u.is_test) ?? [];
   const pending = users?.filter((u) => !u.approved) ?? [];
-  const members = (users?.filter((u) => u.approved) ?? []).filter(
+  const members = (users?.filter((u) => u.approved && !u.is_test) ?? []).filter(
     (u) => !query || u.name.includes(query) || (u.department ?? "").includes(query),
   );
 
@@ -86,6 +108,25 @@ export default function AdminPage() {
                 </div>
                 <Button variant="danger" size="sm" onClick={() => act(u.id, { action: "reject" }, `${u.name}님의 가입 신청을 거절할까요?`)}>거절</Button>
                 <Button size="sm" onClick={() => act(u.id, { action: "approve" })}>승인</Button>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="font-bold">시험 계정</h2>
+          <p className="mb-2 text-sm text-slate-500">
+            혼자서 줄서기 → 호출 흐름을 확인할 때 씁니다. 휴대폰 번호가 없어 문자는 나가지 않고, 관리자만 전환할 수 있습니다.
+          </p>
+          {users && !testAccounts.length && <Button size="sm" onClick={createTestAccounts}>시험 계정 만들기</Button>}
+          <div className="space-y-2">
+            {testAccounts.map((u) => (
+              <Card key={u.id} className="flex items-center gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold">{u.name} <span className="text-sm font-normal text-slate-500">{u.department}</span></p>
+                  <p className="text-sm text-slate-500">{ROLE_LABEL[u.role]}{u.role === "secretary" ? " · 모든 보고실" : ""}</p>
+                </div>
+                <Button variant="secondary" size="sm" onClick={() => viewAs(u.id, u.role)}>이 계정으로 보기</Button>
               </Card>
             ))}
           </div>

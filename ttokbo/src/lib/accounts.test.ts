@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { adminUpdateUser, changePhone, sendLoginCode, signUp, toE164, verifyLoginCode } from "./accounts";
+import { adminUpdateUser, assertTestAccount, changePhone, createTestAccounts, sendLoginCode, signUp, toE164, verifyLoginCode } from "./accounts";
 import { createDb, type Db } from "./db/client";
 import { migrate } from "./db/migrate";
 import { seedIfEmpty } from "./db/seed";
@@ -114,5 +114,42 @@ describe("가입과 승인", () => {
     await signUp(db, { phone: PHONE, name: "홍길동", departmentId: 101, consent: true });
     await expect(changePhone(db, 1, PHONE)).rejects.toMatchObject({ code: "PHONE_TAKEN" });
     await changePhone(db, 1, "+821077778888");
+  });
+});
+
+describe("시험 계정", () => {
+  it("한 번만 만들어지고, 시험 비서는 모든 보고실을 맡으며 휴대폰 번호가 없다", async () => {
+    await createTestAccounts(db);
+    await createTestAccounts(db);
+    const { rows } = await db.query<{ id: number; name: string; role: string; approved: boolean; phone: string | null; rooms: number }>(
+      `SELECT u.id, u.name, u.role, u.approved, c.phone_e164 AS phone, (SELECT count(*)::int FROM room_managers m WHERE m.user_id = u.id) AS rooms
+         FROM users u LEFT JOIN user_contacts c ON c.user_id = u.id WHERE u.is_test ORDER BY u.id`);
+    expect(rows.map((r) => [r.name, r.role, r.approved, r.phone])).toEqual([
+      ["시험직원1", "staff", true, null],
+      ["시험직원2", "staff", true, null],
+      ["시험비서", "secretary", true, null],
+    ]);
+    expect(rows[2].rooms).toBe(9);
+  });
+
+  it("시험 계정으로만 전환할 수 있다 (실제 사용자·관리자는 거부)", async () => {
+    await createTestAccounts(db);
+    const { rows } = await db.query<{ id: number }>(`SELECT id FROM users WHERE is_test ORDER BY id LIMIT 1`);
+    expect(await assertTestAccount(db, rows[0].id)).toMatchObject({ role: "staff" });
+    const real = await signUp(db, { phone: PHONE, name: "홍길동", departmentId: 101, consent: true });
+    await expect(assertTestAccount(db, real.id)).rejects.toMatchObject({ code: "NOT_TEST_ACCOUNT" });
+    await expect(assertTestAccount(db, 31)).rejects.toMatchObject({ code: "NOT_TEST_ACCOUNT" });
+  });
+
+  it("시험 직원이 줄을 서고 시험 비서가 호출해도 문자는 만들어져도 번호가 없어 발송되지 않는다", async () => {
+    await createTestAccounts(db);
+    const { rows } = await db.query<{ id: number; role: string }>(`SELECT id, role FROM users WHERE is_test ORDER BY id`);
+    const staff = { id: rows[0].id, role: "staff" as const };
+    const desk = { id: rows[2].id, role: "secretary" as const };
+    await q.joinQueue(db, staff, { roomId: 4, expectedMinutes: 10 });
+    await q.call(db, desk, 4);
+    const { drainOutbox } = await import("./messaging/outbox");
+    await drainOutbox(db, provider);
+    expect(sent.length).toBe(0);
   });
 });

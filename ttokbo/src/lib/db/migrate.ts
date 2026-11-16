@@ -189,6 +189,13 @@ CREATE TABLE login_codes (
 CREATE INDEX login_codes_phone ON login_codes (phone_e164, created_at DESC);
 `,
   },
+  {
+    // 운영 서버에서 관리자가 전환해 보는 시험 계정. 휴대폰 번호가 없어 직접 로그인·문자 수신이 안 된다.
+    id: "0006_test_accounts",
+    sql: /* sql */ `
+ALTER TABLE users ADD COLUMN is_test boolean NOT NULL DEFAULT false;
+`,
+  },
 ];
 
 export async function migrate(db: Db) {

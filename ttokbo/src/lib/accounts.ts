@@ -142,11 +142,12 @@ export interface AdminUserRow {
   approved: boolean;
   created_at: Date;
   room_ids: number[];
+  is_test: boolean;
 }
 
 export async function listUsers(db: Db) {
   const { rows } = await db.query<AdminUserRow>(
-    `SELECT u.id, u.name, u.role, d.name AS department, u.department_id, c.phone_e164 AS phone, u.active, u.approved, u.created_at,
+    `SELECT u.id, u.name, u.role, d.name AS department, u.department_id, c.phone_e164 AS phone, u.active, u.approved, u.created_at, u.is_test,
             COALESCE(array_agg(m.room_id ORDER BY m.room_id) FILTER (WHERE m.room_id IS NOT NULL), '{}') AS room_ids
        FROM users u
        LEFT JOIN departments d ON d.id = u.department_id
@@ -156,6 +157,39 @@ export async function listUsers(db: Db) {
       ORDER BY u.approved, u.created_at DESC, u.id`,
   );
   return rows;
+}
+
+// ── 시험 계정 (관리자가 전환해서 전체 흐름을 혼자 시험) ──────────
+
+const TEST_ACCOUNTS: { name: string; department: string; role: Role }[] = [
+  { name: "시험직원1", department: "기획예산과", role: "staff" },
+  { name: "시험직원2", department: "총무과", role: "staff" },
+  { name: "시험비서", department: "행정국", role: "secretary" },
+];
+
+/** 시험 계정을 만든다 (이미 있으면 그대로). 시험 비서는 모든 보고실을 맡는다. */
+export async function createTestAccounts(db: Db) {
+  await db.transaction(async (tx) => {
+    for (const t of TEST_ACCOUNTS) {
+      const { rows: found } = await tx.query(`SELECT 1 FROM users WHERE is_test AND name = $1`, [t.name]);
+      if (found[0]) continue;
+      const { rows } = await tx.query<{ id: number }>(
+        `INSERT INTO users (name, department_id, role, approved, is_test)
+         VALUES ($1, (SELECT id FROM departments WHERE name = $2 LIMIT 1), $3, true, true) RETURNING id`,
+        [t.name, t.department, t.role],
+      );
+      if (t.role === "secretary") {
+        await tx.query(`INSERT INTO room_managers (room_id, user_id) SELECT id, $1 FROM rooms`, [rows[0].id]);
+      }
+    }
+  });
+}
+
+/** 관리자가 전환해도 되는 계정인지 (시험 계정만 허용) */
+export async function assertTestAccount(db: Db, userId: number) {
+  const { rows } = await db.query<{ role: Role }>(`SELECT role FROM users WHERE id = $1 AND is_test AND active`, [userId]);
+  if (!rows[0]) throw new QueueError("NOT_TEST_ACCOUNT", "시험 계정으로만 전환할 수 있습니다.", 403);
+  return rows[0];
 }
 
 const ROLES: Role[] = ["staff", "executive", "secretary", "admin"];

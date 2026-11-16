@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { LiveProvider } from "@/components/live";
+import { TestViewBanner } from "@/components/test-view-banner";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full bg-slate-50 text-slate-900">
+        <TestViewBanner />
         <LiveProvider>{children}</LiveProvider>
       </body>
     </html>
