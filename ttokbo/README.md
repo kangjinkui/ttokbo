@@ -24,7 +24,7 @@ DB 설정 없이 바로 뜬다. 기본 DB는 프로세스 안에서 도는 Postg
 
 ## 서버 배포 (네이버 공공클라우드, 당직봇 서버와 공유)
 
-주소: https://ttokbo.27-96-150-212.sslip.io · 서버: dangjik-bot(27.96.150.212, Ubuntu 24.04)
+주소: https://ttokbo.top (예전 주소 ttokbo.27-96-150-212.sslip.io는 자동 이동) · 서버: dangjik-bot(27.96.150.212, Ubuntu 24.04)
 실시간 알림 버스와 문자 워커가 프로세스 안에서 돌기 때문에 서버리스가 아닌 상시 서버에서 실행한다.
 메모리가 빠듯한 공유 서버라 **서버에서 빌드하지 않고** 이 PC에서 빌드한 완성본(`output: "standalone"`)만 올린다.
 
@@ -37,7 +37,7 @@ bash deploy/push.sh     # 빌드 → 업로드 → /opt/ttokbo/releases/<시각-
 - 서비스 `ttokbo.service` (127.0.0.1:3100, MemoryMax 700M, 메모리 부족 시 똑보가 먼저 종료)
 - DB: 같은 서버 PostgreSQL 16의 `ttokbo` DB (작게 설정: `/etc/postgresql/16/main/conf.d/ttokbo.conf`)
 - 설정: `/etc/ttokbo/ttokbo.env`(비밀값), `/etc/ttokbo/db.env`(DB 주소). 저장소에는 넣지 않는다
-- nginx: `/etc/nginx/sites-available/ttokbo` (기존 당직봇 사이트와 별도), HTTPS는 certbot
+- nginx: `/etc/nginx/sites-available/ttokbo-top` (기존 당직봇 사이트와 별도), HTTPS는 certbot. 도메인은 가비아 DNS의 A 레코드(@, www → 서버 IP)
 - 백업: `/etc/cron.daily/ttokbo-backup` → `/var/backups/ttokbo` (14일 보관)
 - 로그: `journalctl -u ttokbo -f`
 - 방화벽(ACG): 80·443 공개(인증서 발급·갱신에 80 필요), 22는 관리자 IP만 / 솔라피 허용 IP에 서버 공인 IP 등록
