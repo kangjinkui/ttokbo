@@ -16,7 +16,7 @@ describe("시드", () => {
   it("운영용 시드는 조직도·보고실만 넣고 시험 계정은 넣지 않는다", async () => {
     await seedOrgIfEmpty(db);
     expect(await count("departments")).toBe(46);
-    expect(await count("rooms")).toBe(9);
+    expect(await count("rooms")).toBe(10);
     expect(await count("users")).toBe(0);
   });
 

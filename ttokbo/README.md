@@ -10,7 +10,7 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
-DB 설정 없이 바로 뜬다. 기본 DB는 프로세스 안에서 도는 PostgreSQL(PGlite, `./.data/pglite`)이고, 첫 실행 때 구청 조직도(7개 국·단, 39개 과)와 보고실 9곳, 시험용 계정이 들어간다.
+DB 설정 없이 바로 뜬다. 기본 DB는 프로세스 안에서 도는 PostgreSQL(PGlite, `./.data/pglite`)이고, 첫 실행 때 구청 조직도(7개 국·단, 39개 과)와 보고실 10곳, 시험용 계정이 들어간다.
 로그인 화면에서 사용자를 골라 들어간다(개발용, SSO로 교체 예정).
 
 | 역할 | 데모 계정 | 들어가는 화면 |

@@ -129,7 +129,7 @@ describe("시험 계정", () => {
       ["시험직원2", "staff", true, null],
       ["시험비서", "secretary", true, null],
     ]);
-    expect(rows[2].rooms).toBe(9);
+    expect(rows[2].rooms).toBe(10);
   });
 
   it("시험 계정으로만 전환할 수 있다 (실제 사용자·관리자는 거부)", async () => {
