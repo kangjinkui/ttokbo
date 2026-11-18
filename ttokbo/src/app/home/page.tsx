@@ -50,8 +50,9 @@ export default function HomePage() {
     window.dispatchEvent(new Event(FAVORITES_KEY));
   };
 
+  // 즐겨찾기를 위로 올리고, 나머지는 서버가 준 표시 순서를 그대로 둔다 (sort는 안정 정렬)
   const rooms = [...(data?.rooms ?? [])].sort(
-    (a, b) => Number(favorites.includes(b.id)) - Number(favorites.includes(a.id)) || a.id - b.id,
+    (a, b) => Number(favorites.includes(b.id)) - Number(favorites.includes(a.id)),
   );
   const mine = rooms.filter((r) => r.myRequest);
 

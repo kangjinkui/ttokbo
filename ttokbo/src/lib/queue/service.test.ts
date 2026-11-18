@@ -69,7 +69,7 @@ describe("권한·개인정보", () => {
     const text = JSON.stringify(home);
     expect(text).not.toContain("김민수");
     expect(text).not.toContain("대외비");
-    expect(home.rooms[0].myRequest).toMatchObject({ ticketNo: 2, ahead: 1 });
+    expect(home.rooms.find((r) => r.id === ROOM)!.myRequest).toMatchObject({ ticketNo: 2, ahead: 1 });
   });
 
   it("다른 직원의 신청은 조회·변경할 수 없다", async () => {

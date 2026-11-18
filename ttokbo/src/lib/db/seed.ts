@@ -11,11 +11,18 @@ const ORG: { name: string; teams: string[] }[] = [
   { name: "미래전략기획단", teams: ["혁신전략과", "공간개발과"] },
 ];
 
-// 보고실. 위치는 아직 받지 못해 비워 둔다(관리자 화면에서 입력).
-const ROOMS = [
-  "행정국장실", "부구청장실", "구청장실",
-  "기획경제국장실", "복지생활국장실", "미래문화국장실", "도시환경국장실", "안전교통국장실", "미래전략기획단장실",
-  "보좌관실",
+// 보고실. 배열 순서가 id(1부터)이고, 화면 표시 순서는 order다. 위치는 아직 받지 못해 비워 둔다.
+const ROOMS: { name: string; order: number }[] = [
+  { name: "행정국장실", order: 3 },
+  { name: "부구청장실", order: 2 },
+  { name: "구청장실", order: 1 },
+  { name: "기획경제국장실", order: 4 },
+  { name: "복지생활국장실", order: 5 },
+  { name: "미래문화국장실", order: 6 },
+  { name: "도시환경국장실", order: 7 },
+  { name: "안전교통국장실", order: 8 },
+  { name: "미래전략기획단장실", order: 9 },
+  { name: "정책보좌관실", order: 10 },
 ];
 
 // 시험용 비서 계정. 비서 1명이 보고실 여러 곳을 맡을 수 있다. 실제 비서는 가입 후 관리자가 지정한다.
@@ -54,8 +61,9 @@ export async function seedOrgIfEmpty(db: Db) {
     await tx.query(`SELECT setval('departments_id_seq', 1000)`);
 
     // 시범 기간에는 언제든 신청할 수 있도록 운영시간을 넓게 둔다.
-    for (const [i, name] of ROOMS.entries()) {
-      await tx.query(`INSERT INTO rooms (id, name, open_from, open_until) VALUES ($1, $2, '00:00', '23:59')`, [i + 1, name]);
+    for (const [i, room] of ROOMS.entries()) {
+      await tx.query(`INSERT INTO rooms (id, name, sort_order, open_from, open_until) VALUES ($1, $2, $3, '00:00', '23:59')`,
+        [i + 1, room.name, room.order]);
     }
     await tx.query(`SELECT setval('rooms_id_seq', 100)`);
   });

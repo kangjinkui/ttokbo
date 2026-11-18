@@ -778,7 +778,7 @@ async function roomSnapshot(tx: Tx, room: RoomRow) {
 }
 
 async function allRooms(tx: Tx) {
-  return (await tx.query<RoomRow>(`SELECT ${ROOM_COLS} FROM rooms ORDER BY id`)).rows;
+  return (await tx.query<RoomRow>(`SELECT ${ROOM_COLS} FROM rooms ORDER BY sort_order, id`)).rows;
 }
 
 async function roomById(tx: Tx, roomId: number) {
@@ -949,7 +949,7 @@ async function boardViewTx(db: Tx, roomId: number) {
 export async function deskRooms(db: Db, actor: Actor) {
   if (actor.role === "admin") return allRooms(db).then((r) => r.map(publicRoom));
   const { rows } = await db.query<RoomRow>(
-    `SELECT ${ROOM_COLS} FROM rooms WHERE id IN (SELECT room_id FROM room_managers WHERE user_id = $1) ORDER BY id`, [actor.id]);
+    `SELECT ${ROOM_COLS} FROM rooms WHERE id IN (SELECT room_id FROM room_managers WHERE user_id = $1) ORDER BY sort_order, id`, [actor.id]);
   return rows.map(publicRoom);
 }
 

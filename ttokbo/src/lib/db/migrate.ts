@@ -196,6 +196,20 @@ CREATE INDEX login_codes_phone ON login_codes (phone_e164, created_at DESC);
 ALTER TABLE users ADD COLUMN is_test boolean NOT NULL DEFAULT false;
 `,
   },
+  {
+    // 보고실 표시 순서 (id는 대기 기록·담당 비서와 연결돼 있어 바꾸지 않는다). 보좌관실 → 정책보좌관실.
+    // 새 DB에서는 이 시점에 보고실이 없어 UPDATE가 아무것도 안 하고, 순서는 시드가 넣는다.
+    id: "0007_room_order",
+    sql: /* sql */ `
+ALTER TABLE rooms ADD COLUMN sort_order int NOT NULL DEFAULT 100;
+UPDATE rooms SET name = '정책보좌관실' WHERE name = '보좌관실';
+UPDATE rooms SET sort_order = CASE name
+  WHEN '구청장실' THEN 1 WHEN '부구청장실' THEN 2 WHEN '행정국장실' THEN 3
+  WHEN '기획경제국장실' THEN 4 WHEN '복지생활국장실' THEN 5 WHEN '미래문화국장실' THEN 6
+  WHEN '도시환경국장실' THEN 7 WHEN '안전교통국장실' THEN 8 WHEN '미래전략기획단장실' THEN 9
+  WHEN '정책보좌관실' THEN 10 ELSE 100 END;
+`,
+  },
 ];
 
 export async function migrate(db: Db) {
